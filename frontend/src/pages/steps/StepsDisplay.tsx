@@ -274,6 +274,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../config/supabaseClient";
 import { motion } from "framer-motion";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 const StepsCounter = () => {
   const [stepCount, setStepCount] = useState(0);
@@ -432,6 +433,7 @@ const StepsCounter = () => {
   const progress = Math.min((stepCount / goal) * 100, 100);
 
   return (
+   <AppLayout>
     <div className="flex flex-col items-center justify-center h-screen w-screen bg-gradient-to-br from-[#351289] to-[#6E17A0] text-white p-4">
       <div className="w-full max-w-md bg-white bg-opacity-10 backdrop-blur-md rounded-lg shadow-lg p-6 text-center">
         <h1 className="text-3xl font-bold mb-4">Step Counter</h1>
@@ -503,6 +505,7 @@ const StepsCounter = () => {
         </div>
       </div>
     </div>
+    </AppLayout>
   );
 };
 
