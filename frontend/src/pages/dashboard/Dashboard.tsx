@@ -1,11 +1,16 @@
+import React from 'react'
+import Bmi from "../../components/BmiComponent/Bmi"
+import Sleep from '@/components/SleepComponent/Sleep'
+import WaterTracker from '@/components/WaterTrackerComponent/WaterTracker'
+import { Sidebar } from '@/components/layout/Sidebar'
 
-const Dashboard = () => {
-
+export default function Dashboard() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-100 p-4 md:p-8">
       
-    <main className="flex flex-col gap-4 mt-5">
       
+    <main className="flex flex-col gap-4 mt-5">
+    <Sidebar/>
       {/* Grid Container */}
       <div className="grid grid-cols-2 gap-3 bg-gray-200 p-4 rounded-lg">
         <div className="bg-white p-4 rounded-lg text-center font-bold text-gray-800 shadow-md">
@@ -21,21 +26,12 @@ const Dashboard = () => {
           Sleep Time
         </div>
       </div>
-
-      {/* Sections */}
-      <div className="bg-white p-4 rounded-lg text-center font-bold text-gray-800 shadow-md">
-        Calorie Tracker
-      </div>
-      <div className="bg-white p-4 rounded-lg text-center font-bold text-gray-800 shadow-md">
-        Exercise Planner
-      </div>
-      <div className="bg-white p-4 rounded-lg text-center font-bold text-gray-800 shadow-md">
-        Section
-      </div>
+<Bmi />
+<Sleep />
+<WaterTracker/>
+      
 
     </main>
   </div>
-  );
-};
-
-export default Dashboard;
+  )
+}
