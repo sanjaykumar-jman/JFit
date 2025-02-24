@@ -55,7 +55,7 @@ const Register = () => {
   };
 
   return (
-    <div className="h-screen flex items-center justify-center bg-gray-900 text-white" style={{width:"100vw", height:"100vh"}}>
+    <div className="h-screen flex items-center justify-center bg-gradient-to-br from-[#351289] to-[#6E17A0] text-white" style={{width:"100vw", height:"100vh"}}>
       <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md text-center">
         <h1 className="text-3xl font-bold text-green-400 mb-4">Complete Your Profile</h1>
 
