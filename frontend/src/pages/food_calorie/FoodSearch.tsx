@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Sidebar } from "@/components/layout/Sidebar";
-
+import {supabase}  from "../../config/supabaseClient";
+ 
 interface FoodItem {
   product_name: string;
   nutriments?: {
@@ -9,28 +9,63 @@ interface FoodItem {
     carbohydrates?: number;
     fat?: number;
   };
-  image_url?: string; // Add image URL field
-  date?: string; // Add date field
+  image_url?: string;
+  date?: string;
 }
-
+ 
+interface SavedFoodEntry {
+  id: string;
+  date: string;
+  product_name: string;
+  calories: number;
+  proteins: number;
+  carbohydrates: number;
+  fats: number;
+  image_url?: string;
+  meal_type: string;
+  serving_size: number;
+}
+ 
 const FoodSearch: React.FC = () => {
   const [foodName, setFoodName] = useState("");
   const [foodResults, setFoodResults] = useState<FoodItem[]>([]);
   const [selectedFoods, setSelectedFoods] = useState<FoodItem[]>([]);
+  const [savedEntries, setSavedEntries] = useState<SavedFoodEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-
+  const [mealType, setMealType] = useState<string>("snack");
+  const [loading, setLoading] = useState(false);
+ 
   const resultsPerPage = 8;
-
+ 
+  useEffect(() => {
+    loadSavedEntries();
+  }, []);
+ 
+  const loadSavedEntries = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('food_entries')
+        .select('*')
+        .order('date', { ascending: false });
+ 
+      if (error) throw error;
+      setSavedEntries(data || []);
+    } catch (err) {
+      console.error('Error loading saved entries:', err);
+      setError('Failed to load saved entries');
+    }
+  };
+ 
   const searchFood = async () => {
     if (!foodName.trim()) return;
-
+ 
+    setLoading(true);
     const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${foodName}&json=true`;
     try {
       const response = await fetch(url);
       const data = await response.json();
-
-      // Filter out results with all nutriments as N/A and those with inaccessible images
+ 
       const filteredResults = data.products.filter((product: FoodItem) => {
         return product.nutriments &&
           (product.nutriments["energy-kcal"] !== undefined ||
@@ -39,8 +74,7 @@ const FoodSearch: React.FC = () => {
           product.nutriments.fat !== undefined) &&
           product.image_url;
       });
-
-      // Check if image URLs are accessible
+ 
       const accessibleResults = await Promise.all(filteredResults.map(async (product: FoodItem) => {
         if (product.image_url) {
           const imageResponse = await fetch(product.image_url);
@@ -49,63 +83,97 @@ const FoodSearch: React.FC = () => {
           }
         }
         return null;
-      
       }));
-
+ 
       const validResults = accessibleResults.filter(product => product !== null) as FoodItem[];
-
+ 
       if (validResults.length > 0) {
         setFoodResults(validResults);
         setError(null);
-        setCurrentPage(1); // Reset to first page
+        setCurrentPage(1);
       } else {
         setFoodResults([]);
         setError("No food found!");
       }
-    } catch {
+    } catch (err) {
       setError("Error fetching data!");
+    } finally {
+      setLoading(false);
     }
   };
-
-  const handleSelectFood = (food: FoodItem) => {
-    // Add current date to the selected food item
-    const currentDate = new Date().toISOString().split('T')[0]; // Get only the date part
-    const foodWithDate = { ...food, date: currentDate };
-    setSelectedFoods((prev) => [...prev, foodWithDate]);
+ 
+  const handleSelectFood = async (food: FoodItem) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setError("Please log in to save food entries");
+        return;
+      }
+ 
+      const entry = {
+        user_id: user.id,
+        date: new Date().toISOString().split('T')[0],
+        product_name: food.product_name,
+        calories: food.nutriments?.["energy-kcal"] || 0,
+        proteins: food.nutriments?.proteins || 0,
+        carbohydrates: food.nutriments?.carbohydrates || 0,
+        fats: food.nutriments?.fat || 0,
+        image_url: food.image_url,
+        meal_type: mealType,
+        serving_size: 1
+      };
+ 
+      const { error: saveError } = await supabase
+        .from('food_entries')
+        .insert(entry);
+ 
+      if (saveError) throw saveError;
+ 
+      await loadSavedEntries();
+      setSelectedFoods((prev) => [...prev, food]);
+    } catch (err) {
+      console.error('Error saving food entry:', err);
+      setError('Failed to save food entry');
+    }
   };
-
+ 
+  const handleDeleteEntry = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('food_entries')
+        .delete()
+        .eq('id', id);
+ 
+      if (error) throw error;
+      await loadSavedEntries();
+    } catch (err) {
+      console.error('Error deleting entry:', err);
+      setError('Failed to delete entry');
+    }
+  };
+ 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
   };
-
-  const aggregatedData = selectedFoods.reduce(
-    (acc, food) => {
-      acc.names.push(food.product_name);
-      acc.calories += food.nutriments?.["energy-kcal"] ?? 0;
-      acc.proteins += food.nutriments?.proteins ?? 0;
-      acc.carbs += food.nutriments?.carbohydrates ?? 0;
-      acc.fats += food.nutriments?.fat ?? 0;
-      return acc;
-    },
-    {
-      names: [] as string[],
-      calories: 0,
-      proteins: 0,
-      carbs: 0,
-      fats: 0,
-    }
-  );
-
+ 
   const totalPages = Math.ceil(foodResults.length / resultsPerPage);
   const displayedResults = foodResults.slice((currentPage - 1) * resultsPerPage, currentPage * resultsPerPage);
-
+ 
+  const groupEntriesByDate = () => {
+    const grouped: { [key: string]: SavedFoodEntry[] } = {};
+    savedEntries.forEach(entry => {
+      if (!grouped[entry.date]) {
+        grouped[entry.date] = [];
+      }
+      grouped[entry.date].push(entry);
+    });
+    return grouped;
+  };
+ 
   return (
-    <>
-    <Sidebar/>
     <div className="flex flex-col items-center p-6">
-      
       <h2 className="text-2xl font-bold mb-4">Food Nutrition Search</h2>
-
+ 
       <div className="flex gap-2 mb-4">
         <input
           type="text"
@@ -114,16 +182,27 @@ const FoodSearch: React.FC = () => {
           placeholder="Enter food name"
           className="border p-2 rounded shadow-md"
         />
+        <select
+          value={mealType}
+          onChange={(e) => setMealType(e.target.value)}
+          className="border p-2 rounded shadow-md"
+        >
+          <option value="breakfast">Breakfast</option>
+          <option value="lunch">Lunch</option>
+          <option value="dinner">Dinner</option>
+          <option value="snack">Snack</option>
+        </select>
         <button
           onClick={searchFood}
-          className="bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600"
+          disabled={loading}
+          className="bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 disabled:bg-blue-300"
         >
-          Search
+          {loading ? 'Searching...' : 'Search'}
         </button>
       </div>
-
+ 
       {error && <p className="text-red-500">{error}</p>}
-
+ 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full max-w-6xl mt-4">
         {displayedResults.map((product, index) => (
           <div
@@ -140,7 +219,7 @@ const FoodSearch: React.FC = () => {
           </div>
         ))}
       </div>
-
+ 
       {totalPages > 1 && (
         <div className="mt-6 flex gap-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
@@ -154,28 +233,45 @@ const FoodSearch: React.FC = () => {
           ))}
         </div>
       )}
-
-      {selectedFoods.length > 0 && (
-        <div className="mt-6 p-4 border rounded shadow bg-gray-100 w-full max-w-md">
-          <h3 className="text-xl font-semibold">Selected Foods</h3>
-          <p><strong>Names:</strong> {aggregatedData.names.join(", ")}</p>
-          <p><strong>Total Calories:</strong> {aggregatedData.calories} kcal</p>
-          <p><strong>Total Proteins:</strong> {aggregatedData.proteins} g</p>
-          <p><strong>Total Carbs:</strong> {aggregatedData.carbs} g</p>
-          <p><strong>Total Fats:</strong> {aggregatedData.fats} g</p>
-          <ul>
-            {selectedFoods.map((food, index) => (
-              <li key={index}>
-                <strong>{food.product_name}</strong> - Date: {food.date}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
+ 
+      <div className="mt-8 w-full max-w-4xl">
+        <h3 className="text-xl font-semibold mb-4">Food Diary</h3>
+        {Object.entries(groupEntriesByDate()).map(([date, entries]) => (
+          <div key={date} className="mb-6 bg-white rounded-lg shadow-md p-4">
+            <h4 className="text-lg font-semibold mb-2">{new Date(date).toLocaleDateString()}</h4>
+            <div className="space-y-2">
+              {entries.map((entry) => (
+                <div key={entry.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div className="flex items-center gap-4">
+                    {entry.image_url && (
+                      <img src={entry.image_url} alt={entry.product_name} className="w-12 h-12 object-cover rounded" />
+                    )}
+                    <div>
+                      <p className="font-medium">{entry.product_name}</p>
+                      <p className="text-sm text-gray-600">
+                        {entry.meal_type} • {entry.calories} kcal
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteEntry(entry.id)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 pt-2 border-t">
+              <p className="font-medium">
+                Daily Totals: {entries.reduce((sum, entry) => sum + entry.calories, 0)} kcal
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
-    </>
   );
 };
-
+ 
 export default FoodSearch;
