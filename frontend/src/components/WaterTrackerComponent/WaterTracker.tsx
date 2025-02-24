@@ -28,7 +28,7 @@ const WaterTracker = () => {
         <h3 className='title'>How many cups do you want to drink?</h3>
         <form className='form' onSubmit={onSubmitUserGoal}>
           <label className='goal-label' >Your goal:
-            <input type="text" value={userGoal} onChange={onChangeUserGoal} className='input1' />
+            <input type="number" min="1" max="15" value={userGoal} onChange={onChangeUserGoal} className='input1 text-black w-[40px]' />
           </label>
           <button className="btn" type="submit">Submit</button>
         </form>

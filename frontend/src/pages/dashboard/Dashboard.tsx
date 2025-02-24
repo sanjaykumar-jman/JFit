@@ -26,9 +26,10 @@ export default function Dashboard() {
           Sleep Time
         </div>
       </div>
-<Bmi />
-<Sleep />
-<WaterTracker/>
+      <Sleep />
+      <WaterTracker/>
+      
+
       
 
     </main>

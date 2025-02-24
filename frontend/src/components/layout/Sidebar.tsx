@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { Activity, Home, Dumbbell, Heart, Droplets, Menu } from "lucide-react";
+import { Activity, Home, Dumbbell, Heart, Droplets, Menu, Footprints, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
@@ -8,9 +8,9 @@ import { useState } from "react";
 const navigation = [
   { name: "Dashboard", href: "/", icon: Home },
   { name: "Exercise", href: "/exercise", icon: Dumbbell },
-  { name: "Water", href: "/water", icon: Droplets },
+  { name: "Steps", href: "/steps", icon: Footprints },
   { name: "Food Calories", href: "/food_calorie", icon: Heart },
-  { name: "Activity", href: "/activity", icon: Activity },
+  { name: "BMI", href: "/bmi", icon: Calculator },
 ];
 
 const NavigationContent = () => (

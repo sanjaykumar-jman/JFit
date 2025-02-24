@@ -59,7 +59,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col items-center justify-center bg-gray-900 text-white relative overflow-hidden">
+    <div className="h-screen flex flex-col items-center justify-center bg-gray-900 text-white relative overflow-hidden " style={{width:"100vw", height:"100vh"}}>
       {/* Floating Animated Dumbbells */}
       <motion.div
         className="absolute top-10 left-10 text-green-400 text-6xl opacity-20"

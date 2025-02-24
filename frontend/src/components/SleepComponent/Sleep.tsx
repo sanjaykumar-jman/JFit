@@ -37,7 +37,7 @@ const Sleep = () => {
                         type="date"
                         value={selectedDate}
                         onChange={changeDate}
-                        className="mb-4 p-2 rounded"
+                        className="mb-4 p-2 rounded text-black"
                     />
 
                     {/* Sleep Bar */}

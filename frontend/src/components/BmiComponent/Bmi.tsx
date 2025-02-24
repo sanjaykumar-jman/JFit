@@ -4,6 +4,7 @@ import low_bmi from "../../images/low_bmi.png";
 import high_bmi from "../../images/high_bmi.png";
 import normal_bmi from "../../images/normal_bmi.png";
 import extreme_bmi from "../../images/extreme_bmi.png";
+import { AppLayout } from "../layout/AppLayout";
 
 interface BmiResult {
   name: string;
@@ -49,7 +50,17 @@ const Bmi: React.FC = () => {
   }
 
   return (
-    <div className="App">
+    <>
+    <AppLayout>
+    <div className="App flex flex-col">
+        <div className="text-center">
+              <h2 className="text-base font-semibold leading-7 text-primary">
+                BMI Calculator
+              </h2>
+              <p className="mt-1 text-3xl text-black font-bold tracking-tight">
+                Track your BMI here!
+              </p>
+            </div>
       <div className="wrapper">
         <h1>BMI Calculator</h1>
 
@@ -82,6 +93,8 @@ const Bmi: React.FC = () => {
         )}
       </div>
     </div>
+    </AppLayout>
+    </>
   );
 };
 

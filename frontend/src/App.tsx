@@ -83,6 +83,8 @@ import WaterPage from "./pages/water";
 import ExercisePage from "./pages/exercise";
 import FoodSearch from "./pages/food_calorie/FoodSearch";
 import Dashboard from "./pages/dashboard/Dashboard";
+import StepsDisplay from "./pages/steps/StepsDisplay";
+import Bmi from "./components/BmiComponent/Bmi";
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -149,6 +151,23 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <FoodSearch/>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/steps"
+            element={
+              <ProtectedRoute>
+                <StepsDisplay/>
+              </ProtectedRoute>
+            }
+          />
+
+        <Route
+            path="/bmi"
+            element={
+              <ProtectedRoute>
+                <Bmi/>
               </ProtectedRoute>
             }
           />
