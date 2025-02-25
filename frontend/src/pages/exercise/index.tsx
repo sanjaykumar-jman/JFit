@@ -91,7 +91,7 @@ const FitnessExercises = () => {
           </Typography>
         ) : (
           exercises.map((exercise) => (
-            <Card key={exercise.id} sx={{ height: "480px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+            <Card key={exercise.id} sx={{ minHeight: "480px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <CardMedia component="img" height="250" image={exercise.gifUrl} alt={exercise.name} />
 
               {/* Reduced CardContent size */}
